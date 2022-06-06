@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+		<script src="jquery-3.3.1.min.js"></script>
+		<script>
+			var assetData = [];
+			var sessionStas = [];
+			var self = this;
+			window.onload = function() {
+
+				$.getJSON({
+						dataType: 'JSON',
+						url: 'https://127.0.0.1:3000/api/v1/stats',
+						crossDomain: true,
+					})
+					.done(function(data) {
+						for(var key in data.assets) {
+							assetName = key.substring(6, key.substring(6, key.length).indexOf(":"));
+							date = key.substring(key.substring(6, key.length).indexOf(":") + 7, key.length);
+							if (assetData[assetName] == undefined) {
+								assetData[assetName] = [];
+							}
+							assetData[assetName].push({
+								y: data.assets[key],
+								x: new Date(Date.parse(date))
+							})
+						}
+
+						var chart = new CanvasJS.Chart("chartContainer", {
+							animationEnabled: true,
+							title: {
+								text: "Asset usage in requests of Distil API"
+							},
+							axisX: {
+								valueFormatString: "MM/DD"
+							},
+							axisY: {
+								prefix: ""
+							},
+							toolTip: {
+								shared: true
+							},
+							legend: {
+								cursor: "pointer",
+								itemclick: toggleDataSeries
+							},
+						});
+
+						chart.options.data = [];
+
+						for (var key in assetData) {
+							chart.options.data.push({
+								type: "stackedBar",
+								name: key,
+								showInLegend: "true",
+								xValueFormatString: "YYYY-DD-MM",
+								yValueFormatString: "#",
+								dataPoints: assetData[key]
+							});
+						}
+
+						chart.render();
+
+						function toggleDataSeries(e) {
+							if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+								e.dataSeries.visible = false;
+							} else {
+								e.dataSeries.visible = true;
+							}
+							chart.render();
+						}
+
+					})
+					.fail(function(xhr, textStatus, errorThrown) {
+						console.log(xhr);
+						console.log(errorThrown);
+					});
+
+				
+			}
+
+		</script>
+	</head>
+	<body>
+		<div id="chartContainer" style="height: 370px; width: 100%;"></div>
+	</body>
+</html>

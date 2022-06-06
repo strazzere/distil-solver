@@ -1,0 +1,22 @@
+version: '3'
+services:
+  distil-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data
+    environment:
+      - REDIS_HOST=redis:6379
+    depends_on:
+      - redis
+    restart: always
+  redis:
+    image: "redis:alpine"
+    command: ["redis-server", "--appendonly", "yes"]
+    hostname: redis
+    volumes:
+      - ./redis-data:/data
+  
